@@ -1,0 +1,53 @@
+{
+  "person": {
+    "age": 28,
+    "education": "bachelors",
+    "location": "San Francisco",
+    "career": {
+      "job_title": "Software Engineer",
+      "industry": "Technology",
+      "years_in_role": 3,
+      "years_experience": 5
+    },
+    "finances": {
+      "annual_income": 155000,
+      "savings": 80000,
+      "debt": 25000,
+      "monthly_expenses": 5500,
+      "investment_portfolio": 40000
+    },
+    "health": "good",
+    "relationship": "partnered",
+    "dependents": 0,
+    "life_satisfaction": 6.5,
+    "stress_level": 6.0,
+    "narrative": "Working at a mid-size tech company, feeling ready for a change."
+  },
+  "decision": {
+    "question": "What should I do with my career at this crossroads?",
+    "options": [
+      {
+        "id": "mba",
+        "label": "Pursue MBA",
+        "description": "Leave job to attend a top-20 MBA program. 2-year program costing ~$150K total. Aiming for product management or consulting exit.",
+        "estimated_duration_years": 2,
+        "tags": ["education", "career", "financial"]
+      },
+      {
+        "id": "startup",
+        "label": "Co-found a startup",
+        "description": "Leave job to co-found a B2B SaaS startup with a college friend. Initial funding from savings + small angel round. High risk, potentially high reward.",
+        "estimated_duration_years": 3,
+        "tags": ["career", "financial", "entrepreneurship"]
+      },
+      {
+        "id": "stay",
+        "label": "Stay and grow",
+        "description": "Stay at current company, pursue promotion to senior engineer and eventually engineering manager. Stable path with predictable growth.",
+        "estimated_duration_years": 1,
+        "tags": ["career", "stability"]
+      }
+    ],
+    "context": "Has 5 years of experience, strong technical skills, a partner who is supportive but risk-averse."
+  }
+}

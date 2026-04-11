@@ -1,0 +1,53 @@
+{
+  "person": {
+    "age": 32,
+    "education": "masters",
+    "location": "New York",
+    "career": {
+      "job_title": "Product Manager",
+      "industry": "Technology",
+      "years_in_role": 2,
+      "years_experience": 8
+    },
+    "finances": {
+      "annual_income": 185000,
+      "savings": 120000,
+      "debt": 45000,
+      "monthly_expenses": 7200,
+      "investment_portfolio": 95000
+    },
+    "health": "good",
+    "relationship": "married",
+    "dependents": 0,
+    "life_satisfaction": 6.0,
+    "stress_level": 7.5,
+    "narrative": "High cost of living and long hours in NYC. Partner works remotely and is open to moving. Considering whether to stay, relocate, or go fully remote."
+  },
+  "decision": {
+    "question": "Should we relocate to a lower cost-of-living city?",
+    "options": [
+      {
+        "id": "stay_nyc",
+        "label": "Stay in New York",
+        "description": "Keep current job and apartment in NYC. High income but high expenses. Rich social life and career network. Partner's remote work continues.",
+        "estimated_duration_years": 1,
+        "tags": ["location", "career", "financial"]
+      },
+      {
+        "id": "move_austin",
+        "label": "Move to Austin",
+        "description": "Transfer to Austin office with a 10% pay cut. Dramatically lower cost of living. Buy a house. Growing tech scene but smaller network. No state income tax.",
+        "estimated_duration_years": 1,
+        "tags": ["location", "financial", "lifestyle"]
+      },
+      {
+        "id": "go_remote",
+        "label": "Go fully remote",
+        "description": "Negotiate full remote work or find a remote-first company. Move to a mid-size city like Raleigh or Denver. Maximum flexibility but potential career ceiling.",
+        "estimated_duration_years": 1,
+        "tags": ["location", "career", "lifestyle"]
+      }
+    ],
+    "context": "Partner works remotely as a freelance designer. No kids yet but planning to start a family in 2-3 years. Both sets of parents are on the East Coast."
+  }
+}

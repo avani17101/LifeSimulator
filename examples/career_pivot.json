@@ -1,0 +1,53 @@
+{
+  "person": {
+    "age": 35,
+    "education": "bachelors",
+    "location": "Chicago",
+    "career": {
+      "job_title": "Investment Banker",
+      "industry": "Finance",
+      "years_in_role": 6,
+      "years_experience": 12
+    },
+    "finances": {
+      "annual_income": 280000,
+      "savings": 350000,
+      "debt": 15000,
+      "monthly_expenses": 8000,
+      "investment_portfolio": 420000
+    },
+    "health": "fair",
+    "relationship": "partnered",
+    "dependents": 0,
+    "life_satisfaction": 4.5,
+    "stress_level": 9.0,
+    "narrative": "Burned out after 12 years in banking. High pay but poor health and no work-life balance. Passionate about education and considering a complete career change."
+  },
+  "decision": {
+    "question": "Should I leave finance for a more fulfilling career?",
+    "options": [
+      {
+        "id": "stay_finance",
+        "label": "Stay in finance",
+        "description": "Push through to Managing Director track. 2-3 more years of intense work for potential $500K+ comp. Use wealth to retire early at 45.",
+        "estimated_duration_years": 3,
+        "tags": ["career", "financial", "health"]
+      },
+      {
+        "id": "teach",
+        "label": "Transition to teaching",
+        "description": "Get teaching certification and teach high school math or economics. Massive pay cut to ~$60K but dramatically better quality of life. Use savings as buffer.",
+        "estimated_duration_years": 2,
+        "tags": ["career", "lifestyle", "purpose"]
+      },
+      {
+        "id": "edtech",
+        "label": "Start an EdTech company",
+        "description": "Build a financial literacy platform for underserved schools. Combine finance expertise with education passion. Self-fund initial development from savings.",
+        "estimated_duration_years": 2,
+        "tags": ["career", "entrepreneurship", "purpose"]
+      }
+    ],
+    "context": "Has strong savings and investments providing financial cushion. Partner is supportive of a change. Has been volunteering as a math tutor on weekends for 3 years."
+  }
+}

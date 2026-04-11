@@ -1,0 +1,53 @@
+{
+  "person": {
+    "age": 30,
+    "education": "masters",
+    "location": "Seattle",
+    "career": {
+      "job_title": "Data Scientist",
+      "industry": "Technology",
+      "years_in_role": 3,
+      "years_experience": 6
+    },
+    "finances": {
+      "annual_income": 165000,
+      "savings": 95000,
+      "debt": 35000,
+      "monthly_expenses": 5800,
+      "investment_portfolio": 60000
+    },
+    "health": "good",
+    "relationship": "married",
+    "dependents": 0,
+    "life_satisfaction": 7.5,
+    "stress_level": 5.5,
+    "narrative": "Happily married, both partners have good careers. Debating the timing and tradeoffs of starting a family versus focusing on career growth."
+  },
+  "decision": {
+    "question": "When should we start a family, and how should we balance it with career growth?",
+    "options": [
+      {
+        "id": "family_now",
+        "label": "Start family now",
+        "description": "Have a child in the next year. Take parental leave, adjust to reduced work capacity. May slow career progression but gain family time during younger years.",
+        "estimated_duration_years": 2,
+        "tags": ["family", "career", "lifestyle"]
+      },
+      {
+        "id": "career_first",
+        "label": "Focus on career for 3 years",
+        "description": "Push for promotion to senior/lead role. Maximize savings and career foundation before having kids at 33-34. More financial security but older parent.",
+        "estimated_duration_years": 3,
+        "tags": ["career", "financial", "family"]
+      },
+      {
+        "id": "balance",
+        "label": "Part-time + family",
+        "description": "Negotiate a 4-day work week or move to a less demanding role. Start family while maintaining career presence. Lower income but better balance from day one.",
+        "estimated_duration_years": 2,
+        "tags": ["family", "career", "lifestyle"]
+      }
+    ],
+    "context": "Partner is a nurse earning $85K. Both sets of parents live nearby and could help with childcare. Company has good parental leave policy (16 weeks)."
+  }
+}
