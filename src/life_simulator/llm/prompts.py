@@ -1,7 +1,21 @@
 """Prompt templates for LLM-powered state transitions."""
 
-from life_simulator.models.person_state import PersonState
+import re
+
 from life_simulator.models.decision import DecisionOption
+from life_simulator.models.person_state import PersonState
+
+# Characters that could be used for prompt injection
+_UNSAFE_PATTERN = re.compile(r"[<>\{\}\\]|(?:SYSTEM|ROLE|INSTRUCTION|IGNORE)", re.IGNORECASE)
+
+
+def _sanitize(text: str, max_length: int = 500) -> str:
+    """Sanitize user-provided text before embedding in prompts."""
+    text = text[:max_length].strip()
+    text = _UNSAFE_PATTERN.sub("", text)
+    # Collapse multiple newlines
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text
 
 
 def build_transition_prompt(
@@ -11,23 +25,28 @@ def build_transition_prompt(
     year_delta: int = 1,
 ) -> str:
     state_json = current_state.model_dump_json(indent=2)
+    safe_label = _sanitize(action.label, 100)
+    safe_desc = _sanitize(action.description, 300)
 
     return f"""You are a life trajectory simulator. Given a person's current state and a decision, predict their state {year_delta} year(s) later.
 
-CURRENT STATE:
+<current_state>
 {state_json}
+</current_state>
 
-DECISION TAKEN:
-{action.label}: {action.description}
+<decision>
+{safe_label}: {safe_desc}
+</decision>
 
-STATISTICAL CONTEXT (use as anchors — stay within these ranges):
+<statistical_context>
 - Salary range for likely role: ${statistical_context['salary_p25']:,.0f} – ${statistical_context['salary_p75']:,.0f} (median ${statistical_context['salary_median']:,.0f})
 - Career transition probability: {statistical_context['transition_prob']:.0%}
 - Cost of living index: {statistical_context['col_index']:.2f}x national average
 - Health outcome probabilities: {statistical_context['health_probs']}
 - Education income premium: {statistical_context['education_premium']:.2f}x
+</statistical_context>
 
-RULES:
+<rules>
 1. Salary MUST fall within the p25–p75 range provided. Only exceed if you provide a strong justification.
 2. Career transitions should respect the probability. Low-probability transitions need a compelling narrative.
 3. Health, stress, and life_satisfaction changes should be incremental (max ±2 per year) unless a major life event occurs.
@@ -35,6 +54,7 @@ RULES:
 5. Age must increment by {year_delta}.
 6. Write a 2-3 sentence "narrative" field describing what happened this year.
 7. Include a "confidence" field (0.0–1.0) indicating prediction confidence.
+</rules>
 
 Return ONLY a JSON object with these exact fields:
 {{
@@ -70,10 +90,11 @@ def build_narrative_prompt(
     decision_label: str,
 ) -> str:
     """Build a prompt to generate a summary narrative for an entire path."""
+    safe_label = _sanitize(decision_label, 100)
     years_summary = "\n".join(
-        f"- Year {s['year']}: {s['narrative']}" for s in path
+        f"- Year {s['year']}: {_sanitize(s.get('narrative', ''), 200)}" for s in path
     )
-    return f"""Summarize this {len(path)}-year life trajectory in 3-4 sentences. The person chose to: {decision_label}.
+    return f"""Summarize this {len(path)}-year life trajectory in 3-4 sentences. The person chose to: {safe_label}.
 
 Year-by-year events:
 {years_summary}

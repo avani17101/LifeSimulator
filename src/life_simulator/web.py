@@ -278,12 +278,12 @@ def _load_example(name: str | None) -> dict:
     }
 
 
-def _run_simulation(person: dict, decision: dict, model_name: str, num_steps: int):
+def _run_simulation(person: dict, decision: dict, model_name: str, num_steps: int, api_key: str | None = None):
     """Build models and run the simulation with progress."""
     from life_simulator.data.distributions import MockGrounding
     from life_simulator.engine.simulation import _INERTIA
     from life_simulator.engine.world_model import WorldModel
-    from life_simulator.llm.client import LLMClient
+    from life_simulator.llm.client import LLMClient, LLMAuthError, LLMModelError, LLMConnectionError
     from life_simulator.models.decision import Decision, DecisionOption
     from life_simulator.models.person_state import (
         CareerState,
@@ -336,7 +336,7 @@ def _run_simulation(person: dict, decision: dict, model_name: str, num_steps: in
 
     try:
         grounding = MockGrounding()
-        llm = LLMClient(model=model_name)
+        llm = LLMClient(model=model_name, api_key=api_key if api_key != "no-key-needed" else None)
         world_model = WorldModel(grounding=grounding, llm=llm)
 
         root = SimNode(year=2026, state=state)
@@ -353,7 +353,7 @@ def _run_simulation(person: dict, decision: dict, model_name: str, num_steps: in
                     call_count / total_calls,
                     text=f"Simulating **{option.label}** — Year {year}",
                 )
-                status_text.caption(f"Calling Claude {model_name.split('-')[1].title()} to predict outcomes...")
+                status_text.caption(f"Calling {llm.display_name} to predict outcomes...")
 
                 new_state, confidence = world_model.transition(current, action, year_delta=1)
                 node = SimNode(
@@ -376,11 +376,26 @@ def _run_simulation(person: dict, decision: dict, model_name: str, num_steps: in
         st.session_state.sim_result = result
         st.session_state.sim_llm = llm
 
+    except LLMAuthError as e:
+        progress_bar.empty()
+        status_text.empty()
+        st.error(f"Authentication failed: {e}")
+        st.info("Check your API key in the sidebar.")
+    except LLMModelError as e:
+        progress_bar.empty()
+        status_text.empty()
+        st.error(f"Model not found: {e}")
+        st.info("Check the model name. For Ollama, make sure you've run `ollama pull <model>`.")
+    except LLMConnectionError as e:
+        progress_bar.empty()
+        status_text.empty()
+        st.error(f"Connection failed: {e}")
+        st.info("For Ollama/LM Studio, make sure the server is running. For cloud providers, check your network.")
     except Exception as e:
         progress_bar.empty()
         status_text.empty()
         st.error(f"Simulation failed: {e}")
-        st.info("Check your API key and try again.")
+        st.info("Check your settings and try again.")
 
 
 def _path_label(sim_tree, path):
@@ -581,59 +596,57 @@ if "sim_result" not in st.session_state:
 with st.sidebar:
     st.markdown("### Settings")
 
+    _PROVIDERS = {
+        "Ollama (local, free)": {"prefix": "ollama", "needs_key": False, "default_model": "llama3.1"},
+        "Groq (free tier)": {"prefix": "groq", "needs_key": True, "env": "GROQ_API_KEY", "default_model": "llama-3.1-70b-versatile"},
+        "Anthropic": {"prefix": "anthropic", "needs_key": True, "env": "ANTHROPIC_API_KEY", "default_model": "claude-sonnet-4-20250514"},
+        "OpenAI": {"prefix": "openai", "needs_key": True, "env": "OPENAI_API_KEY", "default_model": "gpt-4o"},
+        "Together AI": {"prefix": "together", "needs_key": True, "env": "TOGETHER_API_KEY", "default_model": "meta-llama/Llama-3.1-70B-Instruct-Turbo"},
+        "Mistral": {"prefix": "mistral", "needs_key": True, "env": "MISTRAL_API_KEY", "default_model": "mistral-large-latest"},
+        "DeepSeek": {"prefix": "deepseek", "needs_key": True, "env": "DEEPSEEK_API_KEY", "default_model": "deepseek-chat"},
+        "OpenRouter": {"prefix": "openrouter", "needs_key": True, "env": "OPENROUTER_API_KEY", "default_model": "meta-llama/llama-3.1-70b-instruct"},
+        "Fireworks AI": {"prefix": "fireworks", "needs_key": True, "env": "FIREWORKS_API_KEY", "default_model": "accounts/fireworks/models/llama-v3p1-70b-instruct"},
+        "LM Studio (local)": {"prefix": "lmstudio", "needs_key": False, "default_model": "local-model"},
+    }
+
     provider = st.selectbox(
         "Provider",
-        ["Ollama (local, free)", "Anthropic (cloud)", "OpenAI (cloud)", "OpenRouter (cloud)"],
-        help="Ollama runs locally — no API key needed.",
+        list(_PROVIDERS.keys()),
+        help="Ollama & LM Studio run locally (free). Groq has a generous free tier.",
     )
+    prov_config = _PROVIDERS[provider]
+    prefix = prov_config["prefix"]
 
-    if "Ollama" in provider:
-        ollama_model = st.text_input(
-            "Ollama Model",
-            value="llama3.1",
-            help="Any model you've pulled: llama3.1, qwen2.5, mistral, gemma2, etc.",
-        )
-        model = f"ollama/{ollama_model}"
-        api_key_input = "ollama"  # no key needed
-
-    elif "Anthropic" in provider:
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    # API key (stored in session state, NOT os.environ)
+    api_key_input = None
+    if prov_config["needs_key"]:
+        env_var = prov_config["env"]
         api_key_input = st.text_input(
-            "Anthropic API Key",
-            value=api_key,
+            f"{provider} API Key",
+            value=os.environ.get(env_var, ""),
             type="password",
-            help="Get one at console.anthropic.com",
+            help=f"Set via {env_var} env var or paste here.",
         )
-        if api_key_input:
-            os.environ["ANTHROPIC_API_KEY"] = api_key_input
+    else:
+        api_key_input = "no-key-needed"
+
+    # Model selection
+    if prefix == "anthropic":
         model = st.selectbox(
             "Model",
             ["claude-sonnet-4-20250514", "claude-haiku-4-5-20251001"],
             help="Sonnet 4 = more capable | Haiku 4.5 = faster & cheaper",
         )
-
-    elif "OpenAI" in provider:
-        api_key_input = st.text_input(
-            "OpenAI API Key",
-            value=os.environ.get("OPENAI_API_KEY", ""),
-            type="password",
-        )
-        if api_key_input:
-            os.environ["OPENAI_API_KEY"] = api_key_input
-        model = "openai/" + st.text_input("Model", value="gpt-4o")
-
-    else:  # OpenRouter
-        api_key_input = st.text_input(
-            "OpenRouter API Key",
-            value=os.environ.get("OPENROUTER_API_KEY", ""),
-            type="password",
-        )
-        if api_key_input:
-            os.environ["OPENROUTER_API_KEY"] = api_key_input
-        model = "openrouter/" + st.text_input(
+    elif prefix in ("ollama", "lmstudio"):
+        local_model = st.text_input(
             "Model",
-            value="meta-llama/llama-3.1-70b-instruct",
+            value=prov_config["default_model"],
+            help="Any model you've pulled locally.",
         )
+        model = f"{prefix}/{local_model}"
+    else:
+        cloud_model = st.text_input("Model", value=prov_config["default_model"])
+        model = f"{prefix}/{cloud_model}"
 
     steps = st.slider("Years to simulate", 1, 10, 5)
 
@@ -851,10 +864,10 @@ elif st.session_state.step == 2:
             _go(1)
             st.rerun()
     with col_m:
-        has_key = bool(api_key_input) or "Ollama" in provider
+        has_key = bool(api_key_input) or not prov_config["needs_key"]
         can_run = has_key and all(o["label"] and o["description"] for o in options_data)
         if not has_key:
-            st.warning("Enter your API key in the sidebar, or switch to Ollama (free, local).")
+            st.warning("Enter your API key in the sidebar, or switch to a local provider (Ollama, LM Studio).")
         if st.button(
             "Simulate My Future",
             type="primary",
@@ -876,12 +889,19 @@ elif st.session_state.step == 2:
 elif st.session_state.step == 3:
     _render_steps(3)
 
+    # Guard: ensure prerequisites exist
+    if "person" not in st.session_state or "decision" not in st.session_state:
+        st.warning("Missing scenario data. Please start over.")
+        _go(0)
+        st.rerun()
+
     if st.session_state.sim_result is None:
         _run_simulation(
             st.session_state.person,
             st.session_state.decision,
             model,
             steps,
+            api_key=api_key_input if api_key_input != "no-key-needed" else None,
         )
 
     if st.session_state.sim_result is not None:
